@@ -34,11 +34,11 @@ def renderPhysics(actualCoords, deltaT):
     global speed
     global acc
     if actualCoords[1] < win_height-rocket_height or speed!=0:
-        acc = -gravity
+        acc = gravity
         dv = acc*deltaT
         speed += dv
         dy = speed*deltaT
-        newPhysicCoords[1] = newPhysicCoords[1]+speed*deltaT
+        newPhysicCoords[1] = newPhysicCoords[1]-speed*deltaT
     if actualCoords[1] >= win_height-rocket_height and enableFloor:
         acc=0
         speed=0
@@ -77,7 +77,7 @@ cycle_timer = 0
 frames = 0
 refresh_timer = 0
 loop_interval = 0.001
-#setRocketSpeed(-350)               #Allow user to test speed control and effects
+#setRocketSpeed(350)               #Allow user to test speed control and effects
 moveRocket([rocket_coords[0], rocket_coords[0]-90])
 
 while alive:
