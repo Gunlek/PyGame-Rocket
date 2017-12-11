@@ -16,13 +16,14 @@ win.fill(WHITE)
 
 alive = True
 
-framerate = 60        # frames per second
+framerate = 60               # frames per second
 refresh_rate = 1/framerate   # refresh every 1/framerate of seconds
 
-gravity = -9.81*40
+gravity = -9.81*50
 
 acc = gravity
 speed = 0
+enableFloor = False          # is there a floor on the down side of the frame
 
 rocket_width = 25
 rocket_height = 50
@@ -30,14 +31,26 @@ rocket_coords = [win_width//2-rocket_width/2, win_height-rocket_height]
 
 def renderPhysics(actualCoords, deltaT):
     newPhysicCoords = actualCoords
-    if actualCoords[1] < win_height-rocket_height:
+    global speed
+    global acc
+    if actualCoords[1] < win_height-rocket_height or speed!=0:
         acc = -gravity
         dv = acc*deltaT
-        global speed
         speed += dv
         dy = speed*deltaT
         newPhysicCoords[1] = newPhysicCoords[1]+speed*deltaT
+    if actualCoords[1] >= win_height-rocket_height and enableFloor:
+        acc=0
+        speed=0
     return newPhysicCoords
+
+def setRocketSpeed(newSpeed):
+    global speed
+    speed = newSpeed
+
+def setRocketAcceleration(newAcceleration):
+    global acc
+    acc = newAcceleration
 
 def moveRocket(new_coords):
     global rocket_coords
@@ -61,19 +74,18 @@ def updateDisplay(deltaT):
 rocket = drawRocket()
 refresh_timer = 0
 loop_interval = 0.001
+#setRocketSpeed(-350)               #Allow user to test speed control and effects
 moveRocket([rocket_coords[0], rocket_coords[0]-90])
 
 while alive:
     if refresh_timer >= refresh_rate:
-        #print("REFRESH")
-        #print(refresh_timer)
         updateDisplay(refresh_timer)
         refresh_timer = 0
+        print(speed)
     for e in pygame.event.get():
         if e.type == QUIT:
             pygame.quit()
             alive = False
             break
-    #moveRocket([rocket_coords[0], rocket_coords[1]-0.5])
     refresh_timer += loop_interval
     time.sleep(loop_interval)
