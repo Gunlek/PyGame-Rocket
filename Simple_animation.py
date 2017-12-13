@@ -25,24 +25,25 @@ gravity = -9.81*50
 acc = gravity
 speed = 0
 enableFloor = True          # is there a floor on the down side of the frame
-enablePhysic = False         # Enable or disable gravity effect
+enablePhysic = True         # Enable or disable gravity effect
 
 rocket_width = 50
 rocket_height = 25
 rocket_pos = [[win_width//2, win_height], math.pi/2]
+rocketVector = [[win_width//2, win_height], [0, 1]]
 
 
 def renderPhysics(actualRocketPos, deltaT):
-    newPhysicCoords = actualRocketPos[0]
+    newPhysicCoords = actualRocketPos
     global speed
     global acc
-    if actualRocketPos[0][1] < win_height-rocket_height or speed!=0:
+    if actualRocketPos[1] < win_height-rocket_height or speed!=0:
         acc = gravity
         dv = acc*deltaT
         speed += dv
         dy = speed*deltaT
         newPhysicCoords[1] = newPhysicCoords[1]-speed*deltaT
-    if actualRocketPos[0][1] >= win_height and enableFloor:
+    if actualRocketPos[1] >= win_height and enableFloor:
         acc=0
         speed=0
         newPhysicCoords[1] = win_height
@@ -57,30 +58,72 @@ def setRocketAcceleration(newAcceleration):
     acc = newAcceleration
 
 def moveRocket(newRocketPos):
-    global rocket_pos
-    rocket_pos = newRocketPos
+    global rocketVector
+    rocketVector[0] = newRocketPos
+    rocketVector[1] = getRocketVector()[1]
+    
 
 def drawRocket():
-    point_1 = [int(rocket_pos[0][0]+math.sin(rocket_pos[1])*rocket_height/2), int(rocket_pos[0][1]+math.cos(rocket_pos[1])*rocket_height/2)]
-    point_2 = [int(point_1[0]+math.cos(rocket_pos[1])*rocket_width), int(point_1[1]-math.sin(rocket_pos[1])*rocket_width)]
-    point_3 = [int(point_2[0]-math.sin(rocket_pos[1])*rocket_height), int(point_2[1]-math.cos(rocket_pos[1])*rocket_height)]
-    point_4 = [int(point_3[0]-math.cos(rocket_pos[1])*rocket_width), int(point_3[1]+math.sin(rocket_pos[1])*rocket_width)]
+    global rocketVector
+    rocketAngle = getVectorAngle(rocketVector[1])
+    point_1 = [int(rocketVector[0][0]+math.sin(rocketAngle)*rocket_height/2), int(rocketVector[0][1]+math.cos(rocketAngle)*rocket_height/2)]
+    point_2 = [int(point_1[0]+math.cos(rocketAngle)*rocket_width), int(point_1[1]-math.sin(rocketAngle)*rocket_width)]
+    point_3 = [int(point_2[0]-math.sin(rocketAngle)*rocket_height), int(point_2[1]-math.cos(rocketAngle)*rocket_height)]
+    point_4 = [int(point_3[0]-math.cos(rocketAngle)*rocket_width), int(point_3[1]+math.sin(rocketAngle)*rocket_width)]
     
-    #rocket = pygame.draw.rect(win, GREY, (rocket_coords[0], rocket_coords[1], rocket_width, rocket_height))
     rocket = pygame.draw.polygon(win, GREY, [point_1, point_2, point_3, point_4])
     #rocket = pygame.draw.line(win, GREY, point_1, point_2)
-    #pygame.draw.line(win, GREY, point_2, point_3)
+    #rocket =pygame.draw.line(win, GREY, point_2, point_3)
     #pygame.draw.line(win, GREY, point_3, point_4)
     #pygame.draw.line(win, GREY, point_4, point_1)
     return rocket
 
+def getRocketVector():
+    global rocketVector
+    angle = getVectorAngle(rocketVector[1])
+    point_1 = [int(rocketVector[0][0]), int(rocketVector[0][1])]
+    point_2 = [int(point_1[0]+math.cos(angle)*rocket_width*2), int(point_1[1]+math.sin(angle)*rocket_width*2)]
+
+    vector = [point_2[0]-point_1[0], point_2[1]-point_1[1]]
+
+    return [point_1, vector]
+
+def drawVector(origin, vector):
+    pygame.draw.line(win, (255, 0, 0), origin, [rocketVector[0][0]+rocketVector[1][0], rocketVector[0][1]-rocketVector[1][1]])
+
+def getVectorAngle(vector):
+    norme = math.sqrt(vector[0]**2+vector[1]**2)
+    cosAngle = vector[0]/norme
+    sinAngle = vector[1]/norme
+
+    angle=math.acos(cosAngle) if math.asin(sinAngle)>=0 else 2*math.pi - math.acos(cosAngle)
+        
+    return angle
+
+def setVectorAngle(vector, angle):
+    norme = math.sqrt(vector[0]**2+vector[1]**2)
+    xPos = int(norme*math.cos(angle))
+    yPos = int(norme*math.sin(angle))
+    
+    return [xPos, yPos]
+    
+def eventHandler():
+    #TODO: Manage events such as keydown to update rocket angle
+    return False
+
 def updateDisplay(deltaT):
+    global rocketVector
     win.fill(WHITE)
     if enablePhysic:
-        newCoords = renderPhysics(rocket_pos, deltaT)
+        newCoords = renderPhysics(rocketVector[0], deltaT)
     else:
-        newCoords = rocket_pos[0]
-    moveRocket([newCoords, rocket_pos[1]+math.pi/60])
+        newCoords = rocketVector[0]
+    eventHandler()
+    moveRocket(newCoords)
+    angle = getVectorAngle(rocketVector[1])
+    rocketVector[1] = setVectorAngle(rocketVector[1], angle+math.pi/60)
+    rocketVector = getRocketVector()
+    drawVector(rocketVector[0], rocketVector[1])
     drawRocket()
     pygame.display.update()
 
@@ -88,7 +131,8 @@ def updateDisplay(deltaT):
 ## ------------- MAIN LOOP --------------- ##
 #############################################
 
-moveRocket([[rocket_pos[0][0], rocket_pos[0][1]-300], math.pi/2])
+moveRocket([rocketVector[0][0], rocketVector[0][1]-300])
+rocketVector[1] = setVectorAngle(rocketVector[1], math.pi/3)
 rocket = drawRocket()
 cycle_timer = 0
 frames = 0
