@@ -111,7 +111,6 @@ def setVectorAngle(vector, angle):
     return [xPos, yPos]
     
 def eventHandler():
-    #TODO: Manage events such as keydown to update rocket angle
     global rocketVector
     global rightKeyDown
     global leftKeyDown
