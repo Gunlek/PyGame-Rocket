@@ -17,7 +17,7 @@ win.fill(WHITE)
 
 alive = True
 
-framerate = 60                 # frames per second
+framerate = 70                # frames per second
 refresh_rate = 1/framerate     # refresh every 1/framerate of seconds
 
 gravity = -9.81*50
@@ -25,7 +25,10 @@ gravity = -9.81*50
 acc = gravity
 speed = 0
 enableFloor = True          # is there a floor on the down side of the frame
-enablePhysic = True         # Enable or disable gravity effect
+enablePhysic = False        # Enable or disable gravity effect
+
+rightKeyDown = False
+leftKeyDown = False
 
 rocket_width = 50
 rocket_height = 25
@@ -109,6 +112,29 @@ def setVectorAngle(vector, angle):
     
 def eventHandler():
     #TODO: Manage events such as keydown to update rocket angle
+    global rocketVector
+    global rightKeyDown
+    global leftKeyDown
+    angle = getVectorAngle(rocketVector[1])
+    for e in pygame.event.get():
+        if e.type == KEYDOWN:
+            if e.key == K_LEFT:
+                leftKeyDown = True
+            elif e.key == K_RIGHT:
+                rightKeyDown = True
+        elif e.type == KEYUP:
+            global rocketVector
+            if e.key == K_LEFT:
+                leftKeyDown = False
+            elif e.key == K_RIGHT:
+                rightKeyDown = False
+    if leftKeyDown:
+        angle = getVectorAngle(rocketVector[1])
+        rocketVector[1] = setVectorAngle(rocketVector[1], angle+math.pi/200)
+    elif rightKeyDown:
+        angle = getVectorAngle(rocketVector[1])
+        rocketVector[1] = setVectorAngle(rocketVector[1], angle-math.pi/200)
+                
     return False
 
 def updateDisplay(deltaT):
@@ -118,10 +144,9 @@ def updateDisplay(deltaT):
         newCoords = renderPhysics(rocketVector[0], deltaT)
     else:
         newCoords = rocketVector[0]
-    eventHandler()
     moveRocket(newCoords)
-    angle = getVectorAngle(rocketVector[1])
-    rocketVector[1] = setVectorAngle(rocketVector[1], angle+math.pi/60)
+    #angle = getVectorAngle(rocketVector[1])
+    #rocketVector[1] = setVectorAngle(rocketVector[1], angle)
     rocketVector = getRocketVector()
     drawVector(rocketVector[0], rocketVector[1])
     drawRocket()
@@ -132,28 +157,29 @@ def updateDisplay(deltaT):
 #############################################
 
 moveRocket([rocketVector[0][0], rocketVector[0][1]-300])
-rocketVector[1] = setVectorAngle(rocketVector[1], math.pi/3)
+rocketVector[1] = setVectorAngle(rocketVector[1], 0)
 rocket = drawRocket()
-cycle_timer = 0
 frames = 0
 refresh_timer = 0
 loop_interval = 0.001
-#setRocketSpeed(350)               #Allow user to test speed control and effects
+lastRefresh = time.time()
+setRocketSpeed(350)               #Allow user to test speed control and effects
 
 while alive:
+    eventHandler()
+    if time.time() - lastRefresh >= 1:
+        print("FPS: "+str(frames))
+        frames = 0
+        lastRefresh = time.time()
     if refresh_timer >= refresh_rate:
         updateDisplay(refresh_timer)
         refresh_timer = 0
         frames+=1
         #break   #TEMPORAIRE, fige la boucle de rafraichissement
-        if cycle_timer >= 1:
-            cycle_timer = 0
-            frames = 0
     for e in pygame.event.get():
         if e.type == QUIT:
             pygame.quit()
             alive = False
             break
     refresh_timer += loop_interval
-    cycle_timer += loop_interval
     time.sleep(loop_interval)
