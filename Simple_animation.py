@@ -64,6 +64,10 @@ def setRocketSpeed(newSpeed):
     speed[0] = newSpeed[0]
     speed[1] = newSpeed[1]
 
+def getRocketSpeed():
+    global speed
+    return (speed[0], speed[1])
+
 def setRocketAcceleration(newAcceleration):
     global acc
     acc = newAcceleration
@@ -123,23 +127,10 @@ def eventHandler():
     global rightKeyDown
     global leftKeyDown
     global spaceKeyDown
+    rightKeyDown = pygame.key.get_pressed()[K_RIGHT]
+    leftKeyDown = pygame.key.get_pressed()[K_LEFT]
+    spaceKeyDown = pygame.key.get_pressed()[K_SPACE]
     angle = getVectorAngle(rocketVector[1])
-    for e in pygame.event.get():
-        if e.type == KEYDOWN:
-            if e.key == K_LEFT:
-                leftKeyDown = True
-            elif e.key == K_RIGHT:
-                rightKeyDown = True
-            elif e.key == K_SPACE:
-                spaceKeyDown = True
-        elif e.type == KEYUP:
-            global rocketVector
-            if e.key == K_LEFT:
-                leftKeyDown = False
-            elif e.key == K_RIGHT:
-                rightKeyDown = False
-            elif e.key == K_SPACE:
-                spaceKeyDown = False
     if leftKeyDown:
         angle = getVectorAngle(rocketVector[1])
         rocketVector[1] = setVectorAngle(rocketVector[1], angle+math.pi/200)
@@ -147,7 +138,6 @@ def eventHandler():
         angle = getVectorAngle(rocketVector[1])
         rocketVector[1] = setVectorAngle(rocketVector[1], angle-math.pi/200)
     if spaceKeyDown:
-        angle = getVectorAngle(rocketVector[1])
         setRocketSpeed([350*math.cos(angle), 350*math.sin(angle)])
     return False
 
