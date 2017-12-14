@@ -17,7 +17,7 @@ win.fill(WHITE)
 
 alive = True
 
-framerate = 70                # frames per second
+framerate = 60                 # frames per second
 refresh_rate = 1/framerate     # refresh every 1/framerate of seconds
 
 gravity = -9.81*50
@@ -25,10 +25,11 @@ gravity = -9.81*50
 acc = gravity
 speed = 0
 enableFloor = True          # is there a floor on the down side of the frame
-enablePhysic = False        # Enable or disable gravity effect
+enablePhysic = True        # Enable or disable gravity effect
 
 rightKeyDown = False
 leftKeyDown = False
+spaceKeyDown = False
 
 rocket_width = 50
 rocket_height = 25
@@ -40,13 +41,14 @@ def renderPhysics(actualRocketPos, deltaT):
     newPhysicCoords = actualRocketPos
     global speed
     global acc
-    if actualRocketPos[1] < win_height-rocket_height or speed!=0:
+    global rocketVector
+    if rocketVector[0][1] < win_height or speed!=0:
         acc = gravity
         dv = acc*deltaT
         speed += dv
         dy = speed*deltaT
         newPhysicCoords[1] = newPhysicCoords[1]-speed*deltaT
-    if actualRocketPos[1] >= win_height and enableFloor:
+    if rocketVector[0][1] >= win_height and enableFloor:
         acc=0
         speed=0
         newPhysicCoords[1] = win_height
@@ -84,8 +86,8 @@ def drawRocket():
 def getRocketVector():
     global rocketVector
     angle = getVectorAngle(rocketVector[1])
-    point_1 = [int(rocketVector[0][0]), int(rocketVector[0][1])]
-    point_2 = [int(point_1[0]+math.cos(angle)*rocket_width*2), int(point_1[1]+math.sin(angle)*rocket_width*2)]
+    point_1 = [rocketVector[0][0], rocketVector[0][1]]
+    point_2 = [point_1[0]+math.cos(angle)*rocket_width*2, point_1[1]+math.sin(angle)*rocket_width*2]
 
     vector = [point_2[0]-point_1[0], point_2[1]-point_1[1]]
 
@@ -114,6 +116,7 @@ def eventHandler():
     global rocketVector
     global rightKeyDown
     global leftKeyDown
+    global spaceKeyDown
     angle = getVectorAngle(rocketVector[1])
     for e in pygame.event.get():
         if e.type == KEYDOWN:
@@ -121,19 +124,24 @@ def eventHandler():
                 leftKeyDown = True
             elif e.key == K_RIGHT:
                 rightKeyDown = True
+            elif e.key == K_SPACE:
+                spaceKeyDown = True
         elif e.type == KEYUP:
             global rocketVector
             if e.key == K_LEFT:
                 leftKeyDown = False
             elif e.key == K_RIGHT:
                 rightKeyDown = False
+            elif e.key == K_SPACE:
+                spaceKeyDown = False
     if leftKeyDown:
         angle = getVectorAngle(rocketVector[1])
         rocketVector[1] = setVectorAngle(rocketVector[1], angle+math.pi/200)
     elif rightKeyDown:
         angle = getVectorAngle(rocketVector[1])
         rocketVector[1] = setVectorAngle(rocketVector[1], angle-math.pi/200)
-                
+    if spaceKeyDown:
+        setRocketSpeed(350)
     return False
 
 def updateDisplay(deltaT):
@@ -143,13 +151,19 @@ def updateDisplay(deltaT):
         newCoords = renderPhysics(rocketVector[0], deltaT)
     else:
         newCoords = rocketVector[0]
+    rocketVector[0] = newCoords
     moveRocket(newCoords)
     #angle = getVectorAngle(rocketVector[1])
     #rocketVector[1] = setVectorAngle(rocketVector[1], angle)
     rocketVector = getRocketVector()
+    print(rocketVector)
     drawVector(rocketVector[0], rocketVector[1])
     drawRocket()
     pygame.display.update()
+
+def controlInterface():
+    #TODO: Implement control interface using TKinter
+    return False
 
 #############################################    
 ## ------------- MAIN LOOP --------------- ##
@@ -162,7 +176,7 @@ frames = 0
 refresh_timer = 0
 loop_interval = 0.001
 lastRefresh = time.time()
-setRocketSpeed(350)               #Allow user to test speed control and effects
+#setRocketSpeed(350000)               #Allow user to test speed control and effects
 
 while alive:
     eventHandler()
