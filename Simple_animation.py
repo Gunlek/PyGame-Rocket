@@ -26,7 +26,7 @@ gravity = -9.81*50
 acc = gravity
 speed = [0, 0]
 enableFloor = True          # is there a floor on the down side of the frame
-enablePhysic = True        # Enable or disable gravity effect
+enablePhysic = True         # Enable or disable gravity effect
 
 rightKeyDown = False
 leftKeyDown = False
@@ -37,12 +37,13 @@ rocket_height = 25
 rocket_pos = [[win_width//2, win_height], math.pi/2]
 rocketVector = [[win_width//2, win_height], [0, 1]]
 
+targetCoords = [0, 0]
+targetDefined = False
+
 
 def renderPhysics(actualRocketPos, deltaT):
-    newPhysicCoords = actualRocketPos
     global speed
-    global acc
-    global rocketVector
+    newPhysicCoords = actualRocketPos
     if rocketVector[0][1] < win_height or speed!=0:
         acc = gravity
         dvy = acc*deltaT
@@ -60,26 +61,21 @@ def renderPhysics(actualRocketPos, deltaT):
     return newPhysicCoords
 
 def setRocketSpeed(newSpeed):
-    global speed
     speed[0] = newSpeed[0]
     speed[1] = newSpeed[1]
 
 def getRocketSpeed():
-    global speed
     return (speed[0], speed[1])
 
 def setRocketAcceleration(newAcceleration):
-    global acc
     acc = newAcceleration
 
 def moveRocket(newRocketPos):
-    global rocketVector
     rocketVector[0] = newRocketPos
     rocketVector[1] = getRocketVector()[1]
     
 
 def drawRocket():
-    global rocketVector
     rocketAngle = getVectorAngle(rocketVector[1])
     point_1 = [int(rocketVector[0][0]+math.sin(rocketAngle)*rocket_height/2), int(rocketVector[0][1]+math.cos(rocketAngle)*rocket_height/2)]
     point_2 = [int(point_1[0]+math.cos(rocketAngle)*rocket_width), int(point_1[1]-math.sin(rocketAngle)*rocket_width)]
@@ -87,14 +83,9 @@ def drawRocket():
     point_4 = [int(point_3[0]-math.cos(rocketAngle)*rocket_width), int(point_3[1]+math.sin(rocketAngle)*rocket_width)]
     
     rocket = pygame.draw.polygon(win, GREY, [point_1, point_2, point_3, point_4])
-    #rocket = pygame.draw.line(win, GREY, point_1, point_2)
-    #rocket =pygame.draw.line(win, GREY, point_2, point_3)
-    #pygame.draw.line(win, GREY, point_3, point_4)
-    #pygame.draw.line(win, GREY, point_4, point_1)
     return rocket
 
 def getRocketVector():
-    global rocketVector
     angle = getVectorAngle(rocketVector[1])
     point_1 = [rocketVector[0][0], rocketVector[0][1]]
     point_2 = [point_1[0]+math.cos(angle)*rocket_width*2, point_1[1]+math.sin(angle)*rocket_width*2]
@@ -123,14 +114,18 @@ def setVectorAngle(vector, angle):
     return [xPos, yPos]
     
 def eventHandler():
-    global rocketVector
-    global rightKeyDown
-    global leftKeyDown
-    global spaceKeyDown
+    global targetCoords
+    global targetDefined
     rightKeyDown = pygame.key.get_pressed()[K_RIGHT]
     leftKeyDown = pygame.key.get_pressed()[K_LEFT]
     spaceKeyDown = pygame.key.get_pressed()[K_SPACE]
     angle = getVectorAngle(rocketVector[1])
+    for e in pygame.event.get():
+        if e.type == MOUSEBUTTONDOWN and e.button == 1 and targetDefined == False:
+            xPos = e.pos[0]
+            yPos = e.pos[1]
+            targetCoords = [xPos, yPos]
+            targetDefined = True
     if leftKeyDown:
         angle = getVectorAngle(rocketVector[1])
         rocketVector[1] = setVectorAngle(rocketVector[1], angle+math.pi/200)
@@ -141,9 +136,8 @@ def eventHandler():
         setRocketSpeed([350*math.cos(angle), 350*math.sin(angle)])
     return False
 
-def updateDisplay(deltaT):  
+def updateDisplay(deltaT):
     global rocketVector
-    global FPS
     win.fill(WHITE)
     if enablePhysic:
         newCoords = renderPhysics(rocketVector[0], deltaT)
@@ -151,11 +145,12 @@ def updateDisplay(deltaT):
         newCoords = rocketVector[0]
     rocketVector[0] = newCoords
     moveRocket(newCoords)
-    #angle = getVectorAngle(rocketVector[1])
-    #rocketVector[1] = setVectorAngle(rocketVector[1], angle)
     rocketVector = getRocketVector()
     drawVector(rocketVector[0], rocketVector[1])
     drawRocket()
+
+    if targetDefined:
+        pygame.draw.circle(win, (0, 155, 155), targetCoords, 10)
 
     FPSCounterText = pygame.font.SysFont('arial', 25)
     FPSCounter = FPSCounterText.render("FPS: "+str(FPS), 1, (255, 0, 0))
