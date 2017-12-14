@@ -25,8 +25,10 @@ gravity = -9.81*50
 
 acc = gravity
 speed = [0, 0]
+
 enableFloor = True          # is there a floor on the down side of the frame
 enablePhysic = True         # Enable or disable gravity effect
+bouncyGround = False         # is the ground bouncy or not ?
 
 rightKeyDown = False
 leftKeyDown = False
@@ -56,7 +58,8 @@ def renderPhysics(actualRocketPos, deltaT):
     if rocketVector[0][1] >= win_height and enableFloor:
         acc=0
         speed=[0, 0]
-        setRocketSpeed([0, 600])
+        if bouncyGround:
+            setRocketSpeed([0, 600])
         newPhysicCoords[1] = win_height
     return newPhysicCoords
 
