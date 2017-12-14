@@ -18,13 +18,13 @@ FPS = 0
 
 alive = True
 
-framerate = 70                 # frames per second
+framerate = 90                 # frames per second
 refresh_rate = 1/framerate     # refresh every 1/framerate of seconds
 
 gravity = -9.81*50
 
 acc = gravity
-speed = 0
+speed = [0, 0]
 enableFloor = True          # is there a floor on the down side of the frame
 enablePhysic = True        # Enable or disable gravity effect
 
@@ -45,19 +45,24 @@ def renderPhysics(actualRocketPos, deltaT):
     global rocketVector
     if rocketVector[0][1] < win_height or speed!=0:
         acc = gravity
-        dv = acc*deltaT
-        speed += dv
-        dy = speed*deltaT
-        newPhysicCoords[1] = newPhysicCoords[1]-speed*deltaT
+        dvy = acc*deltaT
+        speed[1] += dvy
+        dx = speed[0]*deltaT
+        dy = speed[1]*deltaT
+        angle = getVectorAngle(rocketVector[1])
+        newPhysicCoords[0] = newPhysicCoords[0]+speed[0]*deltaT
+        newPhysicCoords[1] = newPhysicCoords[1]-speed[1]*deltaT
     if rocketVector[0][1] >= win_height and enableFloor:
         acc=0
-        speed=0
+        speed=[0, 0]
+        setRocketSpeed([0, 600])
         newPhysicCoords[1] = win_height
     return newPhysicCoords
 
 def setRocketSpeed(newSpeed):
     global speed
-    speed = newSpeed
+    speed[0] = newSpeed[0]
+    speed[1] = newSpeed[1]
 
 def setRocketAcceleration(newAcceleration):
     global acc
@@ -142,10 +147,11 @@ def eventHandler():
         angle = getVectorAngle(rocketVector[1])
         rocketVector[1] = setVectorAngle(rocketVector[1], angle-math.pi/200)
     if spaceKeyDown:
-        setRocketSpeed(350)
+        angle = getVectorAngle(rocketVector[1])
+        setRocketSpeed([350*math.cos(angle), 350*math.sin(angle)])
     return False
 
-def updateDisplay(deltaT):
+def updateDisplay(deltaT):  
     global rocketVector
     global FPS
     win.fill(WHITE)
@@ -182,12 +188,11 @@ frames = 0
 refresh_timer = 0
 loop_interval = 0.001
 lastRefresh = time.time()
-#setRocketSpeed(350000)               #Allow user to test speed control and effects
+#setRocketSpeed(350)               #Allow user to test speed control and effects
 
 while alive:
     eventHandler()
     if time.time() - lastRefresh >= 1:
-        print("FPS: "+str(frames))
         FPS = frames
         frames = 0
         lastRefresh = time.time()
