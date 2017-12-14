@@ -14,10 +14,11 @@ GREY = (33, 33, 33)
 win = pygame.display.set_mode((win_width, win_height), RESIZABLE)
 win.fill(WHITE)
 
+FPS = 0
 
 alive = True
 
-framerate = 60                 # frames per second
+framerate = 70                 # frames per second
 refresh_rate = 1/framerate     # refresh every 1/framerate of seconds
 
 gravity = -9.81*50
@@ -146,6 +147,7 @@ def eventHandler():
 
 def updateDisplay(deltaT):
     global rocketVector
+    global FPS
     win.fill(WHITE)
     if enablePhysic:
         newCoords = renderPhysics(rocketVector[0], deltaT)
@@ -156,9 +158,13 @@ def updateDisplay(deltaT):
     #angle = getVectorAngle(rocketVector[1])
     #rocketVector[1] = setVectorAngle(rocketVector[1], angle)
     rocketVector = getRocketVector()
-    print(rocketVector)
     drawVector(rocketVector[0], rocketVector[1])
     drawRocket()
+
+    FPSCounterText = pygame.font.SysFont('arial', 25)
+    FPSCounter = FPSCounterText.render("FPS: "+str(FPS), 1, (255, 0, 0))
+    win.blit(FPSCounter, (10, 0))
+    
     pygame.display.update()
 
 def controlInterface():
@@ -182,6 +188,7 @@ while alive:
     eventHandler()
     if time.time() - lastRefresh >= 1:
         print("FPS: "+str(frames))
+        FPS = frames
         frames = 0
         lastRefresh = time.time()
     if refresh_timer >= refresh_rate:
